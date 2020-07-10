@@ -1,0 +1,63 @@
+{% load i18n static %}<script src="{% static "django_jstree/js/jquery-3.4.1.min.js" %}"></script>
+<link rel="stylesheet" href="{% static "django_jstree/css/default/style.min.css" %}">
+<link rel="stylesheet" href="{% static "django_jstree/css/theme.css" %}">
+<script src="{% static "django_jstree/js/jstree.min.js" %}"></script>
+{% block additionaljs %}{{ additionalJS }}{% endblock %}
+<div id="{{ treename }}_container" name="{{ treename }}-container" class="jstree-search-container">
+{% if enableSearch %}
+	<div id="{{ treename }}_search" name="{{ treename }}-search" class="jstree-search-container">
+		<input type="text" value="" id="{{ treename }}-search-input" class="jstree-search-input" placeholder="Search" /><!--<input type="checkbox" id="{{ treename }}-search-fuzzy" name="{{ treename }}-search-fuzzy" class="jstree-search-fuzzy" /><label for="{{ treename }}-search-fuzzy">Include close results</label>--->
+	</div>
+{% endif %}
+	<div id="{{ treename }}" name="{{ treename }}"></div>
+</div>
+<script>
+var jstreejq = $.noConflict();
+{% if enableContextmenu %}
+var menudef = {{ menudef|safe }};
+
+function getPopupMenuDef(node) {
+	nodetype = node.type;
+	return menudef[nodetype];
+}
+{% endif %}
+jstreejq(function() {
+    var to = false;
+
+    jstreejq('#{{ treename }}-search-fuzzy').click(function () {
+        var fuzzystate = $('#{{ treename }}-search-fuzzy').is(':checked') == true;
+        $('#{{ treename }}').settings.search = fuzzystate
+    });
+    
+    jstreejq('#{{ treename }}-search-input').keyup(function () {
+        if(to) { clearTimeout(to); }
+        to = setTimeout(function () {
+            var v = $('#{{ treename }}-search-input').val();
+            $('#{{ treename }}').jstree(true).search(v);
+        }, 250);
+    });
+    
+    jstreejq('#{{ treename }}').jstree({
+        'core' : {
+            'check_callback' : true,
+            'data' : {
+                'url': function (node) {
+                    var dataURL = ''
+                    if (node.id === '#') { 
+                        dataURL = '/jstree/shownode/{{ appname }}/{{ treemodelname }}/{{ leaffieldname }}/{{ startnode }}';
+                    } else {
+                        dataURL = '/jstree/shownode/{{ appname }}/{{ treemodelname }}/{{ leaffieldname }}/' + node.id;
+                    }
+{% if applyTypes %}                    dataURL += "?applyTypes=True";
+{% endif %}                    return dataURL
+                }
+            }
+        },
+{% if applyTypes %}		'types' : {{ typedef|safe }},
+{% endif %}{% if enableContextmenu %}		"contextmenu": {"items": getPopupMenuDef },
+{% endif %}{% if enableState %}		'state' : { 'key' : '{{ treename }}' },
+{% endif %}{% if enableSearch %}		'search' : { 'fuzzy' : {% if enableFuzzySearch %} true{% else %} false{% endif %}, 'show_only_matches' : {% if showOnlyMatches %} true{% else %} false{% endif %}, 'show_only_matches_children' : {% if showOnlyMatchesChildren %} true{% else %} false{% endif %} },
+{% endif %}        'plugins' : [{% if enableCheckbox %} "checkbox", {% endif %}{% if enableContextmenu %} "contextmenu",{% endif %}{% if enableDND %}	"dnd",{% endif %}{% if enableSearch %} "search",{% endif %}{% if enableSort %} "sort",{% endif %}{% if enableState %} "state",{% endif %}{% if applyTypes %} "types",{% endif %}{% if enableUnique %} "unique",{% endif %}{% if enableWholerow %} "wholerow",{% endif %}{% if enableChanged %} "changed",{% endif %}{% if enableConditionalSelect %} "conditionalselect"{% endif %} ]
+    });
+});
+</script>

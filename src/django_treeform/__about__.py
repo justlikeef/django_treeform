@@ -9,7 +9,7 @@ __all__ = [
     "__email__", "__license__", "__copyright__","__requirements__"
 ]
 
-__requirements__ = ["Django","mysqlclient"]
+__requirements__ = ["Django","mysqlclient","django_treebeard"]
 __title__ = "django_treeform"
 __summary__ = "Dynamic form build from a treebeard tree and saved to the specified master and child value table"
 __uri__ = "https://git01.pfsfhq.com/Operations/NetDM/homepage/"
